@@ -9,6 +9,16 @@ import (
 	"golang.org/x/net/html"
 )
 
+func getHref(t html.Token) (ok bool, href string) {
+	for _, a := range t.Attr {
+		if a.Key == "href" {
+			href = a.Val
+			ok = true
+		}
+	}
+	return
+}
+
 func crawl(url string, ch chan string, chFinished chan bool) {
 
 	resp, err := http.Get(url)
@@ -21,7 +31,7 @@ func crawl(url string, ch chan string, chFinished chan bool) {
 
 		return
 	}
-	b := res.Body
+	b := resp.Body
 	defer b.Close()
 	z := html.NewTokenizer(b)
 	for {
