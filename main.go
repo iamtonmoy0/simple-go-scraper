@@ -2,8 +2,52 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
+
+	"golang.org/x/net/html"
 )
+
+func crawl(url string, ch chan string, chFinished chan bool) {
+
+	resp, err := http.Get(url)
+	defer func() {
+		chFinished <- true
+	}()
+
+	if err != nil {
+		fmt.Println("Err:failed to crawl:", url)
+
+		return
+	}
+	b := res.Body
+	defer b.Close()
+	z := html.NewTokenizer(b)
+	for {
+		tt := z.Next()
+		switch {
+		case tt == html.ErrorToken:
+			return
+		case tt == html.StartTagToken:
+			t := z.Token()
+			isAnchor := t.Data == "a"
+			if !isAnchor {
+				continue
+			}
+
+			ok, url := getHref(t)
+			if !ok {
+				continue
+			}
+			hasProto := strings.Index(url, "http") == 0
+			if hasProto {
+				ch <- url
+			}
+		}
+	}
+
+}
 
 func main() {
 
